@@ -1,0 +1,49 @@
+model:
+  base_model: "meta-llama/Llama-3.1-8B"
+  instruct_model: "meta-llama/Llama-3.1-8B-Instruct"
+  dtype: "bfloat16"
+  load_in_4bit: true
+
+data:
+  dataset_name: "Bobby060/us-army-fm-text-cleaned"
+  split: "train"
+
+lora:
+  r: 32
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+    - "embed_tokens"
+    - "lm_head"
+  lora_alpha: 32
+  lora_dropout: 0
+  bias: "none"
+  use_gradient_checkpointing: "unsloth"
+  use_rslora: true
+
+training:
+  max_seq_length: 2048
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 8
+  warmup_ratio: 0.1
+  num_train_epochs: 1
+  learning_rate: 5.0e-5
+  embedding_learning_rate: 5.0e-6
+  logging_steps: 1
+  optim: "adamw_torch"
+  weight_decay: 0.0
+  lr_scheduler_type: "cosine"
+  seed: 42
+  output_dir: "outputs"
+  report_to: "wandb"  # Change to "wandb" if you want logging
+  dataset_num_proc: 8
+
+output:
+  hf_username: "ShethArihant"
+  base_cpt_model: "ShethArihant/Llama-3.1-8B-us-army-fm-base"
+  instruct_model: "ShethArihant/Llama-3.1-8B-us-army-fm-instruct"

@@ -1,0 +1,16 @@
+torch
+transformers
+datasets
+huggingface_hub
+accelerate
+bitsandbytes
+peft
+trl
+triton
+sentencepiece
+protobuf
+PyYAML
+unsloth
+wandb
+python-dotenv
+streamlit

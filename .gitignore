@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Unsloth
+unsloth_compiled_cache/
+_unsloth_temporary_saved_buffers
+
+# wandb
+wandb/
+
+# models
+outputs/
