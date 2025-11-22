@@ -81,23 +81,35 @@ def push_instruct_model(config, base_cpt_model_name):
     del instruct_model
     torch.cuda.empty_cache()
     
-    # Compute instruction residuals
+    # Compute instruction residuals with shape checking
     print("[3/4] Computing instruction residuals...")
     instruction_residuals = {}
     residual_count = 0
+    skipped_count = 0
+    
     for key in base_state_dict.keys():
         if key in instruct_state_dict:
-            instruction_residuals[key] = instruct_state_dict[key] - base_state_dict[key]
-            residual_count += 1
+            # Check if shapes match before computing residual
+            if base_state_dict[key].shape == instruct_state_dict[key].shape:
+                instruction_residuals[key] = instruct_state_dict[key] - base_state_dict[key]
+                residual_count += 1
+            else:
+                print(f"  ⚠️  Skipping {key}: shape mismatch "
+                      f"(base: {base_state_dict[key].shape} vs instruct: {instruct_state_dict[key].shape})")
+                skipped_count += 1
+        else:
+            print(f"  ⚠️  Key {key} not found in instruct model")
     
-    print(f"  Computed {residual_count} instruction residuals")
+    print(f"\n  ✅ Computed {residual_count} instruction residuals")
+    if skipped_count > 0:
+        print(f"  ⚠️  Skipped {skipped_count} layers due to shape mismatches")
     
     del base_state_dict, instruct_state_dict
     torch.cuda.empty_cache()
     
     # Load CPT model from HuggingFace
-    print("[4/4] Loading CPT model from HuggingFace and adding residuals...")
-    cpt_model, _ = FastLanguageModel.from_pretrained(
+    print("\n[4/4] Loading CPT model from HuggingFace and adding residuals...")
+    cpt_model, cpt_tokenizer = FastLanguageModel.from_pretrained(
         model_name=base_cpt_model_name,
         max_seq_length=config['training']['max_seq_length'],
         dtype=getattr(torch, config['model']['dtype']),
@@ -105,26 +117,44 @@ def push_instruct_model(config, base_cpt_model_name):
         token=os.environ.get('HF_TOKEN'),
     )
     
-    # Add instruction residuals
+    # Add instruction residuals with shape checking
     print("\nApplying instruction residuals to CPT model...")
     cpt_state_dict = cpt_model.state_dict()
     applied_count = 0
+    skipped_cpt_count = 0
+    
     for key in cpt_state_dict.keys():
         if key in instruction_residuals:
-            cpt_state_dict[key] = cpt_state_dict[key] + instruction_residuals[key]
-            applied_count += 1
+            # Double-check shape compatibility with CPT model
+            if cpt_state_dict[key].shape == instruction_residuals[key].shape:
+                cpt_state_dict[key] = cpt_state_dict[key] + instruction_residuals[key]
+                applied_count += 1
+            else:
+                print(f"  ⚠️  Skipping {key}: shape mismatch with CPT model "
+                      f"(CPT: {cpt_state_dict[key].shape} vs residual: {instruction_residuals[key].shape})")
+                skipped_cpt_count += 1
     
-    print(f"  Applied {applied_count} instruction residuals")
+    print(f"\n  ✅ Applied {applied_count} instruction residuals")
+    if skipped_cpt_count > 0:
+        print(f"  ⚠️  Skipped {skipped_cpt_count} layers due to shape mismatches with CPT model")
     
     cpt_model.load_state_dict(cpt_state_dict)
     
-    # Push final model
+    # Push final model (use the instruct tokenizer which has proper chat template)
     final_model_name = config['output']['instruct_model']
     print(f"\nPushing instruct model to: {final_model_name}")
     cpt_model.push_to_hub(final_model_name, token=os.environ.get('HF_TOKEN'))
-    tokenizer.push_to_hub(final_model_name, token=os.environ.get('HF_TOKEN'))
+    tokenizer.push_to_hub(final_model_name, token=os.environ.get('HF_TOKEN'))  # Use instruct tokenizer
     
     print(f"✅ Successfully pushed: {final_model_name}")
+    
+    # Print summary
+    print("\n" + "="*80)
+    print("SUMMARY")
+    print("="*80)
+    print(f"Total residuals computed: {residual_count}")
+    print(f"Residuals applied to CPT: {applied_count}")
+    print(f"Layers skipped: {skipped_count + skipped_cpt_count}")
 
 def main():
     parser = argparse.ArgumentParser(description='Push models to HuggingFace Hub')
@@ -159,7 +189,7 @@ def main():
         base_cpt_model_name = push_cpt_model(config, args.checkpoint)
     
     # Step 2: Add residuals and push instruct model
-    # push_instruct_model(config, base_cpt_model_name)
+    push_instruct_model(config, base_cpt_model_name)
     
     print("\n" + "="*80)
     print("✅ ALL MODELS PUSHED SUCCESSFULLY!")
