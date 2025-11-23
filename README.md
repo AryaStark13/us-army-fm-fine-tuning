@@ -27,4 +27,7 @@ git config --global user.name "AryaStark13"
 git config --global user.email "arihant.sheth0802@gmail.com"
 ```
 
-## Loading the model for Inference
+## Run Streamlit Script
+```bash
+streamlit run chat_interface.py
+```

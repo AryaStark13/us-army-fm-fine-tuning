@@ -5,6 +5,7 @@ from transformers import TextIteratorStreamer
 from threading import Thread
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
+import json
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -51,23 +52,16 @@ def generate_response(model, tokenizer, messages, max_new_tokens=512, temperatur
     text_streamer = TextIteratorStreamer(tokenizer)
     
     # Generation kwargs
-    # generation_kwargs = dict(
-    #     **inputs,
-    #     streamer=streamer,
-    #     max_new_tokens=max_new_tokens,
-    #     temperature=temperature,
-    #     top_p=top_p,
-    #     do_sample=True,
-    #     use_cache=True,
-    # )
     generation_kwargs = dict(
         inputs,
         streamer = text_streamer,
-        max_new_tokens = 100,
+        max_new_tokens = max_new_tokens,
         use_cache = True,
         temperature=temperature,
         top_p=top_p,
         do_sample=True,
+        pad_token_id=tokenizer.eos_token_id,  # Handle padding
+        eos_token_id=tokenizer.eos_token_id,  # Explicit EOS
     )
     
     # Start generation in separate thread
@@ -75,10 +69,14 @@ def generate_response(model, tokenizer, messages, max_new_tokens=512, temperatur
     thread.start()
     
     # Yield tokens as they're generated
+    generation_length = 0
     for idx, new_text in enumerate(text_streamer):
         if idx != 0:
+            generation_length += 1
             yield new_text
     
+    print("Total number of tokens generated:", generation_length)
+    print("Set Max New Tokens:", max_new_tokens)
     thread.join()
 
 # Sidebar for configuration
@@ -95,11 +93,27 @@ with st.sidebar:
     
     # Generation parameters
     st.markdown("### Generation Settings")
-    max_new_tokens = st.slider("Max New Tokens", 64, 2048, 512, 64)
+    max_new_tokens = st.slider("Max New Tokens", 64, 4096, 2048, 64)
     temperature = st.slider("Temperature", 0.1, 2.0, 0.7, 0.1)
     top_p = st.slider("Top P", 0.1, 1.0, 0.9, 0.05)
     
     st.markdown("---")
+    
+    # Export chat button
+    if len(st.session_state.get("messages", [])) > 0:
+        # Convert messages to JSON
+        chat_json = json.dumps(st.session_state.messages, indent=2, ensure_ascii=False)
+        
+        st.download_button(
+            label="📥 Export Chat",
+            data=chat_json,
+            file_name="army_fm_chat_export.json",
+            mime="application/json",
+            use_container_width=True
+        )
+    else:
+        st.button("📥 Export Chat", disabled=True, use_container_width=True, 
+                 help="No messages to export yet")
     
     # Clear chat button
     if st.button("🗑️ Clear Chat", use_container_width=True):
