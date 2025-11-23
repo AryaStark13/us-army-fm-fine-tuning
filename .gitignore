@@ -215,3 +215,6 @@ wandb/
 
 # models
 outputs/
+
+# Tensors
+*.pt

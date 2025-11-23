@@ -1,9 +1,15 @@
 import streamlit as st
 import torch
-from unsloth import FastLanguageModel
+# from unsloth import FastLanguageModel
 from transformers import TextIteratorStreamer
 from threading import Thread
 import os
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+from dotenv import load_dotenv
+load_dotenv()
+
+device = torch.device("cuda")
 
 # Page config
 st.set_page_config(
@@ -15,54 +21,63 @@ st.set_page_config(
 @st.cache_resource
 def load_model(model_name, max_seq_length=2048):
     """Load model and tokenizer - cached to avoid reloading"""
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=model_name,
-        max_seq_length=max_seq_length,
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct", device=device)
+    model = AutoModelForCausalLM.from_pretrained(
+        "ShethArihant/Llama-3.1-8B-us-army-fm-instruct",
         dtype=torch.bfloat16,
-        load_in_4bit=False,
-        token=os.environ.get('HF_TOKEN'),
+        device_map="cuda"
     )
-    FastLanguageModel.for_inference(model)
+
     return model, tokenizer
 
 def format_chat_messages(messages, tokenizer):
     """Format messages using the model's chat template"""
-    formatted = tokenizer.apply_chat_template(
+    inputs = tokenizer.apply_chat_template(
         messages,
-        tokenize=False,
-        add_generation_prompt=True
-    )
-    return formatted
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(model.device)
+
+    return inputs
 
 def generate_response(model, tokenizer, messages, max_new_tokens=512, temperature=0.7, top_p=0.9):
     """Generate streaming response from the model"""
-    # Format messages
-    prompt = format_chat_messages(messages, tokenizer)
-    
-    # Tokenize
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    # Tokenize messages
+    inputs = format_chat_messages(messages, tokenizer)
     
     # Setup streamer
-    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+    text_streamer = TextIteratorStreamer(tokenizer)
     
     # Generation kwargs
+    # generation_kwargs = dict(
+    #     **inputs,
+    #     streamer=streamer,
+    #     max_new_tokens=max_new_tokens,
+    #     temperature=temperature,
+    #     top_p=top_p,
+    #     do_sample=True,
+    #     use_cache=True,
+    # )
     generation_kwargs = dict(
-        **inputs,
-        streamer=streamer,
-        max_new_tokens=max_new_tokens,
+        inputs,
+        streamer = text_streamer,
+        max_new_tokens = 100,
+        use_cache = True,
         temperature=temperature,
         top_p=top_p,
         do_sample=True,
-        use_cache=True,
     )
     
     # Start generation in separate thread
-    thread = Thread(target=model.generate, kwargs=generation_kwargs)
+    thread = Thread(target = model.generate, kwargs = generation_kwargs)
     thread.start()
     
     # Yield tokens as they're generated
-    for new_text in streamer:
-        yield new_text
+    for idx, new_text in enumerate(text_streamer):
+        if idx != 0:
+            yield new_text
     
     thread.join()
 

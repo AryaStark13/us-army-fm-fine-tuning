@@ -26,3 +26,5 @@ cp .env.example .env
 git config --global user.name "AryaStark13"
 git config --global user.email "arihant.sheth0802@gmail.com"
 ```
+
+## Loading the model for Inference
