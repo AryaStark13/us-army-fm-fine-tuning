@@ -94,7 +94,7 @@ with st.sidebar:
     # Model selection
     model_name = st.text_input(
         "Model Name",
-        value="ShethArihant/Llama-3.2-3B-army-text-instruct",
+        value="ShethArihant/Llama-3.1-8B-us-army-fm-SFT-instruct",
         help="HuggingFace model name"
     )
     
