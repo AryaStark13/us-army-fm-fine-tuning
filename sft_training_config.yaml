@@ -1,0 +1,58 @@
+# Model Configuration
+model:
+  model_name: "ShethArihant/Llama-3.1-8B-us-army-fm-instruct"
+  tokenizer_name: "meta-llama/Llama-3.1-8B-Instruct"
+
+# Dataset Configuration
+data:
+  dataset_name: "Bobby060/us-army-fm-instruct-clone"
+
+# LoRA Configuration
+lora:
+  r: 16                    # LoRA rank - lower = less memory, less capacity
+  lora_alpha: 32           # LoRA scaling factor (typically 2*r)
+  lora_dropout: 0.05       # Dropout for LoRA layers
+  bias: "none"             # Bias training strategy
+  target_modules:          # Modules to apply LoRA to
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# Training Configuration
+training:
+  output_dir: "./army-fm-sft-checkpoints"
+  final_model_dir: "./army-fm-sft-final"
+  num_epochs: 3
+  per_device_train_batch_size: 1        # Small batch for 22GB VRAM
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 8        # Effective batch size = 1 * 8 = 8
+  gradient_checkpointing: true          # Saves memory at cost of speed
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03
+  max_length: 2048
+  max_grad_norm: 1.0
+  optimizer: "adamw_torch"         # Memory-efficient optimizer
+  # optimizer: "paged_adamw_8bit"         # Memory-efficient optimizer
+  
+  # Logging and Evaluation
+  logging_steps: 10
+  eval_strategy: "steps"
+  eval_steps: 200
+  save_strategy: "steps"
+  save_steps: 200
+  save_total_limit: 3                   # Keep only 3 best checkpoints
+
+# Hub Configuration
+hub:
+  push_to_hub: true
+  hub_model_id: "ShethArihant/Llama-3.1-8B-us-army-fm-SFT-instruct"
+
+# WandB Configuration
+wandb:
+  project: "army-fm-sft"
+  run_name: "llama-3.1-8b-army-fm-sft-v1"
