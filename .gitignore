@@ -215,6 +215,9 @@ wandb/
 
 # models
 outputs/
+army-fm-sft-checkpoints/
+army-fm-sft-final/
+army-fm-sft-merged/
 
 # Tensors
 *.pt

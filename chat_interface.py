@@ -22,12 +22,19 @@ st.set_page_config(
 @st.cache_resource
 def load_model(model_name, max_seq_length=2048):
     """Load model and tokenizer - cached to avoid reloading"""
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct", device=device)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, device=device)
     model = AutoModelForCausalLM.from_pretrained(
-        "ShethArihant/Llama-3.1-8B-us-army-fm-instruct",
+        model_name,
         dtype=torch.bfloat16,
         device_map="cuda"
     )
+    # Works - Do not change
+    # tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct", device=device)
+    # model = AutoModelForCausalLM.from_pretrained(
+    #     "ShethArihant/Llama-3.1-8B-us-army-fm-instruct",
+    #     dtype=torch.bfloat16,
+    #     device_map="cuda"
+    # )
 
     return model, tokenizer
 
