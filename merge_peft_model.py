@@ -17,6 +17,7 @@ def clear_memory():
 def merge_and_save_model(
     base_model_name,
     peft_model_path,
+    subfolder,
     output_dir,
     hub_model_id=None,
     push_to_hub=False
@@ -55,6 +56,7 @@ def merge_and_save_model(
     model = PeftModel.from_pretrained(
         base_model,
         peft_model_path,
+        subfolder=subfolder,
         torch_dtype=torch.bfloat16
     )
     
@@ -116,6 +118,12 @@ def main():
         help="Path to PEFT adapter checkpoint or HF model ID"
     )
     parser.add_argument(
+        "--subfolder",
+        type=str,
+        default=None,
+        help="Subfolder within PEFT Model ID/Path to load from (eg: checkpoints)"
+    )
+    parser.add_argument(
         "--output_dir",
         type=str,
         default="./army-fm-sft-merged",
@@ -138,6 +146,7 @@ def main():
     merge_and_save_model(
         base_model_name=args.base_model,
         peft_model_path=args.peft_model,
+        subfolder=args.subfolder,
         output_dir=args.output_dir,
         hub_model_id=args.hub_model_id,
         push_to_hub=args.push_to_hub

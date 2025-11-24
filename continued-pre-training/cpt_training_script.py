@@ -60,18 +60,22 @@ def continual_pretrain(config):
         return {"text": [example + EOS_TOKEN for example in examples["text"]]}
     
     dataset = dataset.map(formatting_prompts_func, batched=True)
+    dataset = dataset.train_test_split(test_size=0.2, shuffle=False, seed=config["training"]["seed"])
     
     # Training
     trainer = UnslothTrainer(
         model=model,
         tokenizer=tokenizer,
-        train_dataset=dataset,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
         dataset_text_field="text",
         max_seq_length=config['training']['max_seq_length'],
         dataset_num_proc=config['training']['dataset_num_proc'],
         args=UnslothTrainingArguments(
             per_device_train_batch_size=config['training']['per_device_train_batch_size'],
             gradient_accumulation_steps=config['training']['gradient_accumulation_steps'],
+            per_device_eval_batch_size=config['training']['per_device_train_batch_size'],
+            eval_accumulation_steps=config['training']['gradient_accumulation_steps'],
             warmup_ratio=config['training']['warmup_ratio'],
             num_train_epochs=config['training']['num_train_epochs'],
             learning_rate=config['training']['learning_rate'],
