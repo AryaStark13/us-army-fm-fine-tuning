@@ -120,29 +120,31 @@ def add_instruction_residuals(config, base_cpt_model_name):
     print(f"  Instruct: {instruct_model_name}")
     print(f"  CPT: {base_cpt_model_name}")
     
-    # Load original base model
-    print("\n[1/4] Loading original base model...")
+    # Load original base model on CPU
+    print("\n[1/4] Loading original base model on CPU...")
     base_model, _ = FastLanguageModel.from_pretrained(
         model_name=base_model_name,
         max_seq_length=config['training']['max_seq_length'],
         dtype=getattr(torch, config['model']['dtype']),
         load_in_4bit=config['model']['load_in_4bit'],
         token=os.environ.get('HF_TOKEN'),
+        device_map="cpu",
     )
-    base_state_dict = base_model.state_dict()
+    base_state_dict = {k: v.cpu() for k, v in base_model.state_dict().items()}
     del base_model
     torch.cuda.empty_cache()
-    
-    # Load original instruct model
-    print("[2/4] Loading original instruct model...")
+
+    # Load original instruct model on CPU
+    print("[2/4] Loading original instruct model on CPU...")
     instruct_model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=instruct_model_name,
         max_seq_length=config['training']['max_seq_length'],
         dtype=getattr(torch, config['model']['dtype']),
         load_in_4bit=config['model']['load_in_4bit'],
         token=os.environ.get('HF_TOKEN'),
+        device_map="cpu",
     )
-    instruct_state_dict = instruct_model.state_dict()
+    instruct_state_dict = {k: v.cpu() for k, v in instruct_model.state_dict().items()}
     del instruct_model
     torch.cuda.empty_cache()
     
