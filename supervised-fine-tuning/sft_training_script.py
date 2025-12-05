@@ -151,11 +151,14 @@ def main(config_path):
     
     # Push to Hub
     if config['hub']['push_to_hub']:
-        print(f"Pushing model to Hub: {config['hub']['hub_model_id']}")
-        trainer.model.push_to_hub(
+        print("Merging LoRA adapters with base model...")
+        merged_model = trainer.model.merge_and_unload()
+
+        print(f"Pushing merged model to Hub: {config['hub']['hub_model_id']}")
+        merged_model.push_to_hub(
             config['hub']['hub_model_id'],
             token=hf_token,
-            commit_message="SFT fine-tuned model"
+            commit_message="SFT fine-tuned model (merged)"
         )
         tokenizer.push_to_hub(
             config['hub']['hub_model_id'],
