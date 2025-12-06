@@ -1,7 +1,7 @@
 # Model Configuration
 model:
   model_name: "ShethArihant/Llama-3.1-8B-us-army-fm-instruct"
-  tokenizer_name: "meta-llama/Llama-3.1-8B-Instruct"
+  tokenizer_name: "ShethArihant/Llama-3.1-8B-us-army-fm-instruct"
 
 # Dataset Configuration
 data:
@@ -9,7 +9,7 @@ data:
 
 # LoRA Configuration
 lora:
-  r: 16                    # LoRA rank - lower = less memory, less capacity
+  r: 32                    # LoRA rank - lower = less memory, less capacity
   lora_alpha: 32           # LoRA scaling factor (typically 2*r)
   lora_dropout: 0.05       # Dropout for LoRA layers
   bias: "none"             # Bias training strategy
@@ -27,9 +27,9 @@ training:
   output_dir: "./army-fm-sft-checkpoints"
   final_model_dir: "./army-fm-sft-final"
   num_epochs: 3
-  per_device_train_batch_size: 1        # Small batch for 22GB VRAM
-  per_device_eval_batch_size: 1
-  gradient_accumulation_steps: 8        # Effective batch size = 1 * 8 = 8
+  per_device_train_batch_size: 2        # Small batch for 22GB VRAM
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 4        # Effective batch size = 1 * 8 = 8
   gradient_checkpointing: true          # Saves memory at cost of speed
   learning_rate: 2.0e-4
   lr_scheduler_type: "cosine"
@@ -55,4 +55,4 @@ hub:
 # WandB Configuration
 wandb:
   project: "army-fm-sft"
-  run_name: "llama-3.1-8b-army-fm-sft-v1"
+  run_name: "llama-3.1-8b-army-fm-sft-v2"

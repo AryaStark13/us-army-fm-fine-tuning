@@ -55,4 +55,4 @@ hub:
 # WandB Configuration
 wandb:
   project: "army-fm-sft"
-  run_name: "gemma-7b-us-army-fm-cpt-instruct"
+  run_name: "gemma-7b-army-fm-sft-v3"
