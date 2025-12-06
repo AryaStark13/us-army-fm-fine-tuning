@@ -24,6 +24,14 @@ def load_config(config_path):
         config = yaml.safe_load(f)
     return config
 
+def add_eos_to_assistant_messages(example, eos_token):
+    """Add EOS token to the end of each assistant message"""
+    messages = example['messages']
+    for message in messages:
+        if message['role'] == 'assistant':
+            message['content'] = message['content'] + eos_token
+    return {'messages': messages}
+
 def main(config_path):
     # Load configuration
     config = load_config(config_path)
@@ -90,9 +98,18 @@ def main(config_path):
     # Load dataset
     print("Loading dataset...")
     dataset = load_dataset(config['data']['dataset_name'])
-    train_dataset = dataset['train']
-    eval_dataset = dataset['test']
-    
+
+    # Add EOS token to assistant messages
+    print("Adding EOS token to assistant messages...")
+    train_dataset = dataset['train'].map(
+        lambda x: add_eos_to_assistant_messages(x, tokenizer.eos_token),
+        desc="Adding EOS to train dataset"
+    )
+    eval_dataset = dataset['test'].map(
+        lambda x: add_eos_to_assistant_messages(x, tokenizer.eos_token),
+        desc="Adding EOS to eval dataset"
+    )
+
     print(f"Train samples: {len(train_dataset)}")
     print(f"Eval samples: {len(eval_dataset)}")
     
