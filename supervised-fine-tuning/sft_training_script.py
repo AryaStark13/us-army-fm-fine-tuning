@@ -68,7 +68,15 @@ def main(config_path):
         config['model']['tokenizer_name'],
         trust_remote_code=True
     )
-    tokenizer.pad_token = tokenizer.eos_token
+
+    # Set pad token if it doesn't exist (e.g., for LLaMA)
+    # Models like Gemma already have a dedicated pad token
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+        print(f"Pad token not found. Setting pad_token = eos_token ({tokenizer.eos_token})")
+    else:
+        print(f"Using existing pad_token: {tokenizer.pad_token}")
+
     tokenizer.padding_side = "right"
     
     # Load model
