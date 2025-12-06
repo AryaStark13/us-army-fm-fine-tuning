@@ -167,6 +167,7 @@ def add_instruction_residuals(config, base_cpt_model_name):
         dtype=getattr(torch, config['model']['dtype']),
         load_in_4bit=config['model']['load_in_4bit'],
         token=os.environ.get('HF_TOKEN'),
+        device_map="cpu",
     )
     
     # Add instruction residuals: θ_final = θ_cpt + Θ_residual
