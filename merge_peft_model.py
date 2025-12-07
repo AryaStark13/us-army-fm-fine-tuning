@@ -1,3 +1,6 @@
+"""
+Script to merge a PEFT model with its base model and save the merged model.
+"""
 import os
 import gc
 import torch

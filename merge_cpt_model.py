@@ -1,3 +1,9 @@
+"""
+This script merges instruction residuals into a CPT model.
+Instruction residuals are computed as the difference between
+an instruction-tuned model and its base model (parameter-wise).
+The final model is obtained by adding these residuals to the CPT model.
+"""
 import os
 import torch
 import argparse
