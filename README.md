@@ -6,7 +6,7 @@ This repository contains code and resources for fine-tuning a language model usi
 ### Gemma Models
 | Stage | Model ID | Description |
 |-------|----------|-------------|
-| Base | `google/gemma-2-9b` | Original Gemma base model |
+| Base | `google/gemma-7b` | Original Gemma base model |
 | CPT-base | [`ShethArihant/gemma-7b-us-army-fm-CPT-base`](https://huggingface.co/ShethArihant/gemma-7b-us-army-fm-CPT-base) | Continued pretraining on Army FM corpus |
 | CPT-instruct | [`ShethArihant/gemma-7b-us-army-fm-CPT-instruct`](https://huggingface.co/ShethArihant/gemma-7b-us-army-fm-CPT-instruct) | CPT-base + instruction residuals |
 | SFT-instruct | [`ShethArihant/gemma-7b-us-army-fm-SFT-instruct`](https://huggingface.co/ShethArihant/gemma-7b-us-army-fm-SFT-instruct) | Supervised fine-tuned on instruction dataset |
